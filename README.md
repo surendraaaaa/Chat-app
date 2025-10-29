@@ -41,7 +41,7 @@ chatapp/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/chatapp.git
+   https://github.com/surendraaaaa/Chat-app.git
    cd chatapp
 2. **Update frontend WebSocket URL****
 In frontend/src/App.js (or wherever SockJS is initialized), 
