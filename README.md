@@ -52,7 +52,7 @@ const socket = new SockJS("http://chat-backend:5000/ws-chat");
 
 with:
 
-const socket = new SockJS("http://<your-ec2-ip>:5000/ws-chat");
+const socket = new SockJS("http://your-ec2-ip:5000/ws-chat");
 
 3. **Start the app****
  
