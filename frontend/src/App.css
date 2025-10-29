@@ -1,0 +1,5 @@
+.container { font-family: Arial; width: 500px; margin: 50px auto; }
+.login input, .chat input { padding: 10px; margin-right: 10px; width: 70%; }
+button { padding: 10px; }
+.messages { border: 1px solid #ccc; height: 300px; overflow-y: scroll; margin-bottom: 10px; padding: 5px; background: #f0f0f0; }
+p { margin: 5px 0; }
