@@ -12,7 +12,7 @@ function App() {
   const stompClientRef = useRef(null);
 
   const connect = () => {
-    const socket = new SockJS("http://chat-backend:5000/ws-chat");
+    const socket = new SockJS("http://localhost:5000/ws-chat");
     const client = new Client({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,

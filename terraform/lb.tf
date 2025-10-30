@@ -1,0 +1,78 @@
+# Application Load Balancer
+resource "aws_lb" "app_alb" {
+  name               = var.lb_name
+  internal           = false
+  load_balancer_type = var.lb_type
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = data.aws_subnets.default.ids
+}
+
+# Target Group for Frontend
+resource "aws_lb_target_group" "app_tg" {
+  name        = var.lb_target_group_name
+  port        = 80
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = data.aws_vpc.default.id
+
+  health_check {
+    path                = "/"
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
+
+# Target Group for Backend
+resource "aws_lb_target_group" "backend_tg" {
+  name        = "chatapp-backend-tg"
+  port        = 5000
+  protocol    = "HTTP"
+  target_type = "ip"
+  vpc_id      = data.aws_vpc.default.id
+
+  health_check {
+    path                = "/actuator/health" # or your backend health endpoint
+    protocol            = "HTTP"
+    matcher             = "200"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+}
+
+# Listener for ALB
+resource "aws_lb_listener" "app_listener" {
+  depends_on        = [aws_lb_target_group.app_tg]
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+# Listener Rule to route /ws-chat to backend
+resource "aws_lb_listener_rule" "backend_ws_rule" {
+  listener_arn = aws_lb_listener.app_listener.arn
+  priority     = 10
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+  condition {
+  path_pattern {
+    values = ["/ws-chat"]
+  }
+}
+
+}
+
