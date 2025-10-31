@@ -12,32 +12,48 @@ function App() {
   const stompClientRef = useRef(null);
 
   const connect = () => {
-    const socket = new SockJS("http://localhost:5000/ws-chat");
+    if (!username.trim()) {
+      alert("Enter a username first");
+      return;
+    }
+
     const client = new Client({
-      webSocketFactory: () => socket,
-      reconnectDelay: 5000,
+      brokerURL: undefined, // disable native WebSocket
+      webSocketFactory: () => new SockJS("http://localhost:5000/ws-chat"),
+      reconnectDelay: 3000,
+      debug: (str) => console.log("STOMP DEBUG:", str),
     });
 
     client.onConnect = () => {
+      console.log("✅ Connected to WebSocket server");
       setConnected(true);
+
       client.subscribe("/topic/messages", (message) => {
-        setMessages((prev) => [...prev, JSON.parse(message.body)]);
+        const payload = JSON.parse(message.body);
+        setMessages((prev) => [...prev, payload]);
       });
     };
 
-    client.onStompError = (frame) => {
-      console.error("Broker error:", frame.headers["message"]);
+    client.onWebSocketError = (err) => {
+      console.error("WebSocket error:", err);
     };
 
-    stompClientRef.current = client;
+    client.onStompError = (frame) => {
+      console.error("STOMP error:", frame.headers["message"]);
+    };
+
     client.activate();
+    stompClientRef.current = client;
   };
 
   const sendMessage = () => {
     if (stompClientRef.current && msg.trim()) {
       stompClientRef.current.publish({
         destination: "/app/chat",
-        body: JSON.stringify({ sender: username, content: msg }),
+        body: JSON.stringify({
+          sender: username,
+          content: msg,
+        }),
       });
       setMsg("");
     }
@@ -45,9 +61,7 @@ function App() {
 
   useEffect(() => {
     return () => {
-      if (stompClientRef.current) {
-        stompClientRef.current.deactivate();
-      }
+      if (stompClientRef.current) stompClientRef.current.deactivate();
     };
   }, []);
 
@@ -56,7 +70,7 @@ function App() {
       {!connected ? (
         <div className="login">
           <input
-            placeholder="Username"
+            placeholder="Enter username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
@@ -67,10 +81,12 @@ function App() {
           <div className="messages">
             {messages.map((m, idx) => (
               <p key={idx}>
-                <strong>{m.sender}:</strong> {m.content}
+                <strong>{m.sender}: </strong>
+                {m.content}
               </p>
             ))}
           </div>
+
           <input
             placeholder="Message"
             value={msg}
