@@ -19,7 +19,8 @@ function App() {
 
     const client = new Client({
       brokerURL: undefined, // disable native WebSocket
-      webSocketFactory: () => new SockJS("http://localhost:5000/ws-chat"),
+      webSocketFactory: () => new SockJS(process.env.REACT_APP_BACKEND_URL + "/ws-chat")
+,
       reconnectDelay: 3000,
       debug: (str) => console.log("STOMP DEBUG:", str),
     });
